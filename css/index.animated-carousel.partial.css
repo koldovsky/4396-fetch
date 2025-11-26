@@ -1,0 +1,58 @@
+.animated-carousel {
+    display: grid;
+    grid-template-columns: 50px 1fr 50px;
+    gap: 10px;
+    align-items: center;
+    margin: 20px auto;
+    max-width: 1200px;
+}
+
+.animated-carousel__viewport {
+    overflow: hidden;
+    width: 100%;
+}
+
+.animated-carousel__track {
+    display: flex;
+    transition: transform 0.5s ease-in-out;
+}
+
+.animated-carousel__slide {
+    flex: 0 0 100%;
+    box-sizing: border-box;
+    padding: 0 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.animated-carousel__slide img {
+    width: 100%;
+    max-width: 200px;
+    height: auto;
+    display: block;
+}
+
+.animated-carousel__button {
+    font-size: 2rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #333;
+}
+
+.animated-carousel__button:hover {
+    color: #000;
+}
+
+@media (min-width: 600px) {
+    .animated-carousel__slide {
+        flex: 0 0 50%;
+    }
+}
+
+@media (min-width: 900px) {
+    .animated-carousel__slide {
+        flex: 0 0 33.333%;
+    }
+}

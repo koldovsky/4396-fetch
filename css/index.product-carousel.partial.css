@@ -1,0 +1,17 @@
+.product-carousel {
+  display: grid;
+  grid-template-columns: 100px 1fr 100px;
+  gap: 20px;
+  align-items: center;
+
+  .product-carousel__track-container {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+
+    img {
+        width: 100%;
+        max-width: 200px;
+    }
+  }
+}
