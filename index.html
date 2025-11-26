@@ -8,6 +8,7 @@
     <link rel="shortcut icon" href="img/baby-yoda.svg" type="image/x-icon" />
     <link rel="stylesheet" href="css/index.css" />
     <link rel="stylesheet" href="css/index.animated-carousel.partial.css" />
+    <link rel="stylesheet" href="css/global.chat.partial.css" />
     <script
       src="https://unpkg.com/htmx.org@1.9.10"
       integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC"
@@ -21,6 +22,11 @@
       data-hx-swap="outerHTML"
       data-hx-get="global.header.partial.html"
     ></header>
+    <section
+      data-hx-trigger="load"
+      data-hx-swap="outerHTML"
+      data-hx-get="global.chat.partial.html"
+    ></section>
     <main>
       <div
         data-hx-trigger="load"

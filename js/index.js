@@ -5,6 +5,7 @@ function init() {
     import('./index.product-carousel.js');
     import('./index.animated-carousel.js');
     import('./global.footer-contact-form.js');
+    import('./global.chat.js');
 }
 
 const totalPartials = document.querySelectorAll('[hx-trigger="load"], [data-hx-trigger="load"]').length;
