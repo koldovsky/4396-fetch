@@ -1,15 +1,136 @@
+// DOM Elements
+const chatAuth = document.getElementById('chat-auth');
+const chatMain = document.getElementById('chat-main');
 const chatMessages = document.getElementById('chat-messages');
 const chatForm = document.getElementById('chat-form');
-const chatUsername = document.getElementById('chat-username');
 const chatMessage = document.getElementById('chat-message');
+const chatCurrentUser = document.getElementById('chat-current-user');
+const chatLogout = document.getElementById('chat-logout');
 
-// Format timestamp to readable time
+// Auth forms
+const loginForm = document.getElementById('chat-login-form');
+const registerForm = document.getElementById('chat-register-form');
+const loginError = document.getElementById('login-error');
+const registerError = document.getElementById('register-error');
+const authTabs = document.querySelectorAll('.chat__auth-tab');
+
+// Auth state
+let authToken = localStorage.getItem('chatToken');
+let currentUsername = localStorage.getItem('chatUsername');
+
+// Tab switching
+authTabs.forEach(tab => {
+  tab.addEventListener('click', () => {
+    const tabName = tab.dataset.tab;
+    authTabs.forEach(t => t.classList.remove('chat__auth-tab--active'));
+    tab.classList.add('chat__auth-tab--active');
+    
+    if (tabName === 'login') {
+      loginForm.classList.remove('chat__auth-form--hidden');
+      registerForm.classList.add('chat__auth-form--hidden');
+    } else {
+      registerForm.classList.remove('chat__auth-form--hidden');
+      loginForm.classList.add('chat__auth-form--hidden');
+    }
+  });
+});
+
+// Show/hide auth or chat based on login state
+function updateAuthUI() {
+  if (authToken && currentUsername) {
+    chatAuth.classList.add('chat__main--hidden');
+    chatMain.classList.remove('chat__main--hidden');
+    chatCurrentUser.textContent = currentUsername;
+    loadMessages();
+  } else {
+    chatAuth.classList.remove('chat__main--hidden');
+    chatMain.classList.add('chat__main--hidden');
+  }
+}
+
+// Register
+registerForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  registerError.textContent = '';
+  
+  const username = document.getElementById('register-username').value.trim();
+  const password = document.getElementById('register-password').value;
+  
+  try {
+    const res = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+    
+    const data = await res.json();
+    if (res.ok) {
+      authToken = data.token;
+      currentUsername = data.username;
+      localStorage.setItem('chatToken', authToken);
+      localStorage.setItem('chatUsername', currentUsername);
+      updateAuthUI();
+    } else {
+      registerError.textContent = data.error || 'Registration failed';
+    }
+  } catch (err) {
+    registerError.textContent = 'Network error';
+  }
+});
+
+// Login
+loginForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  loginError.textContent = '';
+  
+  const username = document.getElementById('login-username').value.trim();
+  const password = document.getElementById('login-password').value;
+  
+  try {
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+    
+    const data = await res.json();
+    if (res.ok) {
+      authToken = data.token;
+      currentUsername = data.username;
+      localStorage.setItem('chatToken', authToken);
+      localStorage.setItem('chatUsername', currentUsername);
+      updateAuthUI();
+    } else {
+      loginError.textContent = data.error || 'Login failed';
+    }
+  } catch (err) {
+    loginError.textContent = 'Network error';
+  }
+});
+
+// Logout
+chatLogout.addEventListener('click', () => {
+  authToken = null;
+  currentUsername = null;
+  localStorage.removeItem('chatToken');
+  localStorage.removeItem('chatUsername');
+  updateAuthUI();
+});
+
+// Format timestamp
 function formatTime(isoString) {
   const date = new Date(isoString);
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
-// Render a single message
+// Escape HTML
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// Render message
 function renderMessage({ timestamp, username, message }) {
   const div = document.createElement('div');
   div.className = 'chat__message';
@@ -21,20 +142,24 @@ function renderMessage({ timestamp, username, message }) {
   return div;
 }
 
-// Escape HTML to prevent XSS
-function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
-}
-
-// Load and display all messages
+// Load messages
 async function loadMessages() {
+  if (!authToken) return;
+  
   try {
-    const response = await fetch('/api/chat');
-    const messages = await response.json();
+    const res = await fetch('/api/chat', {
+      headers: { 'Authorization': `Bearer ${authToken}` }
+    });
     
+    if (res.status === 401) {
+      // Token expired or invalid
+      chatLogout.click();
+      return;
+    }
+    
+    const messages = await res.json();
     chatMessages.innerHTML = '';
+    
     if (messages.length === 0) {
       chatMessages.innerHTML = '<p class="chat__empty">No messages yet. Start the conversation!</p>';
     } else {
@@ -46,49 +171,47 @@ async function loadMessages() {
   }
 }
 
-// Send a new message
-async function sendMessage(username, message) {
+// Send message
+chatForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const message = chatMessage.value.trim();
+  if (!message || !authToken) return;
+  
   try {
-    const response = await fetch('/api/chat', {
+    const res = await fetch('/api/chat', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, message })
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authToken}`
+      },
+      body: JSON.stringify({ message })
     });
     
-    if (response.ok) {
-      const newMsg = await response.json();
-      // Remove empty state message if present
+    if (res.status === 401) {
+      chatLogout.click();
+      return;
+    }
+    
+    if (res.ok) {
+      const newMsg = await res.json();
       const emptyMsg = chatMessages.querySelector('.chat__empty');
       if (emptyMsg) emptyMsg.remove();
       
       chatMessages.appendChild(renderMessage(newMsg));
       chatMessages.scrollTop = chatMessages.scrollHeight;
-      return true;
+      chatMessage.value = '';
+      chatMessage.focus();
     }
   } catch (err) {
     console.error('Failed to send message:', err);
   }
-  return false;
-}
-
-// Handle form submission
-chatForm.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  
-  const username = chatUsername.value.trim();
-  const message = chatMessage.value.trim();
-  
-  if (username && message) {
-    const success = await sendMessage(username, message);
-    if (success) {
-      chatMessage.value = '';
-      chatMessage.focus();
-    }
-  }
 });
 
-// Load messages on init
-loadMessages();
+// Initialize
+updateAuthUI();
 
-// Poll for new messages every 5 seconds
-setInterval(loadMessages, 5000);
+// Poll for new messages every 5 seconds (only if logged in)
+setInterval(() => {
+  if (authToken) loadMessages();
+}, 5000);

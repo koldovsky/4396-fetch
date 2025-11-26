@@ -1,23 +1,47 @@
 <section id="chat" class="chat container">
   <h2 class="chat__title">Community Chat</h2>
-  <div class="chat__messages" id="chat-messages"></div>
-  <form class="chat__form" id="chat-form">
-    <input
-      type="text"
-      class="chat__input"
-      id="chat-username"
-      placeholder="Your name"
-      required
-      maxlength="30"
-    />
-    <input
-      type="text"
-      class="chat__input chat__input--message"
-      id="chat-message"
-      placeholder="Type a message..."
-      required
-      maxlength="200"
-    />
-    <button type="submit" class="chat__button button">Send</button>
-  </form>
+  
+  <!-- Auth section (shown when not logged in) -->
+  <div id="chat-auth" class="chat__auth">
+    <div class="chat__auth-tabs">
+      <button class="chat__auth-tab chat__auth-tab--active" data-tab="login">Login</button>
+      <button class="chat__auth-tab" data-tab="register">Register</button>
+    </div>
+    
+    <!-- Login form -->
+    <form id="chat-login-form" class="chat__auth-form">
+      <input type="text" id="login-username" class="chat__input" placeholder="Username" required minlength="3" maxlength="20" />
+      <input type="password" id="login-password" class="chat__input" placeholder="Password" required minlength="4" />
+      <button type="submit" class="chat__button button">Login</button>
+      <p id="login-error" class="chat__error"></p>
+    </form>
+    
+    <!-- Register form -->
+    <form id="chat-register-form" class="chat__auth-form chat__auth-form--hidden">
+      <input type="text" id="register-username" class="chat__input" placeholder="Username" required minlength="3" maxlength="20" />
+      <input type="password" id="register-password" class="chat__input" placeholder="Password" required minlength="4" />
+      <button type="submit" class="chat__button button">Register</button>
+      <p id="register-error" class="chat__error"></p>
+    </form>
+  </div>
+  
+  <!-- Chat section (shown when logged in) -->
+  <div id="chat-main" class="chat__main chat__main--hidden">
+    <div class="chat__user-bar">
+      <span>Logged in as: <strong id="chat-current-user"></strong></span>
+      <button id="chat-logout" class="chat__logout">Logout</button>
+    </div>
+    <div class="chat__messages" id="chat-messages"></div>
+    <form class="chat__form" id="chat-form">
+      <input
+        type="text"
+        class="chat__input chat__input--message"
+        id="chat-message"
+        placeholder="Type a message..."
+        required
+        maxlength="200"
+      />
+      <button type="submit" class="chat__button button">Send</button>
+    </form>
+  </div>
 </section>
